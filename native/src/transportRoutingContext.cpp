@@ -101,6 +101,12 @@ void TransportRoutingContext::loadTransportSegments(vector<SHARED_PTR<TransportS
 			continue;
 		}
 		for (SHARED_PTR<TransportRoute> &route : s->routes) {
+			// A route that is not running at the requested time is dropped before it ever becomes
+			// a segment, so the search routes around it instead of returning a trip nobody can
+			// board. The java planner does the same in TransportRoutingContext.java.
+			if (cfg && !cfg->isRouteOpen(route)) {
+				continue;
+			}
 			int stopIndex = -1;
 			double dist = SAME_STOP;
 			for (int k = 0; k < route->forwardStops.size(); k++) {

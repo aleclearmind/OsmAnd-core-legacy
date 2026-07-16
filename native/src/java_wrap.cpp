@@ -608,6 +608,8 @@ jfieldID jfield_TransportRoutingConfiguration_defaultBoardingTime = NULL;
 jfieldID jfield_TransportRoutingConfiguration_useSchedule = NULL;
 jfieldID jfield_TransportRoutingConfiguration_scheduleTimeOfDay = NULL;
 jfieldID jfield_TransportRoutingConfiguration_scheduleMaxTime = NULL;
+jfieldID jfield_TransportRoutingConfiguration_filterByOpeningHours = NULL;
+jfieldID jfield_TransportRoutingConfiguration_openingHoursTime = NULL;
 jfieldID jfield_TransportRoutingConfiguration_maxRouteDistance = NULL;
 jfieldID jfield_TransportRoutingConfiguration_maxRouteIncreaseSpeed = NULL;
 jfieldID jfield_TransportRoutingConfiguration_increaseForAlternativesRoutes = NULL;
@@ -1078,6 +1080,10 @@ void loadJniRenderingContext(JNIEnv* env) {
 		getFid(env, jclass_TransportRoutingConfiguration, "scheduleTimeOfDay", "I");
 	jfield_TransportRoutingConfiguration_scheduleMaxTime =
 		getFid(env, jclass_TransportRoutingConfiguration, "scheduleMaxTime", "I");
+	jfield_TransportRoutingConfiguration_filterByOpeningHours =
+		getFid(env, jclass_TransportRoutingConfiguration, "filterByOpeningHours", "Z");
+	jfield_TransportRoutingConfiguration_openingHoursTime =
+		getFid(env, jclass_TransportRoutingConfiguration, "openingHoursTime", "J");
 	jfield_TransportRoutingConfiguration_maxRouteDistance =
 		getFid(env, jclass_TransportRoutingConfiguration, "maxRouteDistance", "I");
 	jfield_TransportRoutingConfiguration_maxRouteIncreaseSpeed =
@@ -2248,6 +2254,10 @@ void parseTransportRoutingConfiguration(JNIEnv* ienv, shared_ptr<TransportRoutin
 		ienv->GetIntField(jTransportConfig, jfield_TransportRoutingConfiguration_scheduleTimeOfDay);
 	rConfig->scheduleMaxTime =
 		ienv->GetIntField(jTransportConfig, jfield_TransportRoutingConfiguration_scheduleMaxTime);
+	rConfig->filterByOpeningHours =
+		ienv->GetBooleanField(jTransportConfig, jfield_TransportRoutingConfiguration_filterByOpeningHours);
+	rConfig->openingHoursTime =
+		ienv->GetLongField(jTransportConfig, jfield_TransportRoutingConfiguration_openingHoursTime);
 	rConfig->maxRouteDistance =
 		ienv->GetIntField(jTransportConfig, jfield_TransportRoutingConfiguration_maxRouteDistance);
 	rConfig->maxRouteIncreaseSpeed =
