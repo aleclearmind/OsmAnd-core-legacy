@@ -3,9 +3,11 @@
 #include "CommonCollections.h"
 #include "boost/dynamic_bitset.hpp"
 #include "commonOsmAndCore.h"
+#include "openingHoursParser.h"
 // #include <algorithm>
 
 class GeneralRouter;
+struct TransportRoute;
 typedef boost::dynamic_bitset<> dynbitset;
 
 struct TransportRoutingConfiguration {
@@ -45,6 +47,17 @@ struct TransportRoutingConfiguration {
 	int32_t scheduleTimeOfDay = 12 * 60 * 6;
 	int32_t scheduleMaxTime = 50 * 6;
 	//    int32_t scheduleDayNumber; Unused
+
+	// Drop routes whose opening_hours say they do not run at openingHoursTime. Mirrors
+	// TransportRoutingConfiguration.java field for field — java_wrap.cpp copies both across, so
+	// the java planner and this one make the same decision. Off by default.
+	bool filterByOpeningHours = false;
+	int64_t openingHoursTime = 0;  // epoch millis, as java hands it over
+
+	// opening_hours strings repeat across every stop of a route and across an operator's routes,
+	// and parsing one is not cheap. Keyed by the string, not the route.
+	UNORDERED(map)<string, std::shared_ptr<OpeningHoursParser::OpeningHours>> openingHoursCache;
+
 	MAP_STR_FLOAT speed;
 	UNORDERED(map)<string, float> rawTypes;
 
@@ -60,6 +73,8 @@ struct TransportRoutingConfiguration {
 	int32_t getStopTime(const std::string &routeType);
 	int32_t getBoardingTime(const std::string &routeType);
 	int32_t getChangeTime(const std::string &fromRouteType, const std::string &toRouteType);
+
+	bool isRouteOpen(const SHARED_PTR<TransportRoute> &route);
 };
 
 #endif	//_OSMAND_TRANSPORT_ROUTING_CONFIGURATION_H

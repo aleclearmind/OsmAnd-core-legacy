@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "generalRouter.h"
+#include "transportRoutingObjects.h"
 
 TransportRoutingConfiguration::TransportRoutingConfiguration()
 	: router(new GeneralRouter()) {}
@@ -147,6 +148,38 @@ int32_t TransportRoutingConfiguration::getChangeTime(const std::string &fromRout
 		defaultChangeTime = obstacles.evaluateInt(bs2, 240);
 	}
 	return defaultChangeTime;
+}
+
+// Whether the route runs at openingHoursTime. A route with no opening_hours, or one whose
+// opening_hours we cannot parse, counts as running: the tag is optional and frequently malformed,
+// so an unreadable value must never be what makes a trip disappear. Kept in step with
+// TransportRoutingConfiguration.isRouteOpen() in java — the two planners must agree.
+bool TransportRoutingConfiguration::isRouteOpen(const SHARED_PTR<TransportRoute>& route) {
+	if (!filterByOpeningHours || !route) {
+		return true;
+	}
+	auto tag = route->tags.find("opening_hours");
+	if (tag == route->tags.end() || tag->second.empty()) {
+		return true;
+	}
+	std::shared_ptr<OpeningHoursParser::OpeningHours> hours;
+	auto cached = openingHoursCache.find(tag->second);
+	if (cached != openingHoursCache.end()) {
+		hours = cached->second;
+	} else {
+		hours = OpeningHoursParser::parseOpenedHours(tag->second);
+		openingHoursCache[tag->second] = hours;
+	}
+	if (!hours) {
+		return true;
+	}
+	// java hands over epoch millis; commonOsmAndCore.h's localtime() puts it in the same local
+	// zone java's Calendar.getInstance() uses, which is what opening_hours rules are written
+	// against. That wrapper rather than localtime_r directly: core-legacy still has a Windows
+	// target, and localtime_r does not exist there. (Taking time_t by value picks the wrapper;
+	// the C library's localtime takes a pointer.)
+	tm dateTime = localtime((time_t) (openingHoursTime / 1000));
+	return hours->isOpenedForTime(dateTime);
 }
 
 #endif
